@@ -1,6 +1,19 @@
 #!/usr/bin/env python2
 #-*- coding: utf-8 -*-
 
+"""
+Client component of our chunked network file transfer system.
+
+The client connects to the specified server, and transfers every file in the folder
+passed as an argument. It will negotiate with the server to transfer each file
+in chunks of a certain length, typically a really small number so each chunk
+fits in one packet. This is to ensure atomicity of each segment's transfer.
+
+If something goes wrong, the client will wait a length of time before
+attempting to resume the transfer. Upon successful completion, the client 
+will exit with a status code of 0.
+"""
+
 import sys
 import cPickle as pickle
 import socket
@@ -22,6 +35,10 @@ log.addHandler(strm)
 log.setLevel(20)
 
 def send_file(filename):
+    """
+    Sends an individual file, with all the associated error handling and
+    try/except statements such a monumental undertaking should require.
+    """
     # todo: deal with socket timeouts
     # todo: deal with os.error
     try:

@@ -1,6 +1,16 @@
 #!/usr/bin/env python2
 #-*- coding: utf-8 -*-
 
+"""
+Server component of the automatic data-transfer application.
+
+This server listens on the specified socket on all available interfaces
+and receives connections from clients. Each client connection is dispatched
+to its own thread, where the client and server negotiate and transfer 
+the desired dataset serially, with built-in error checking. Once this transfer
+is completed, the server terminates the connection.
+"""
+
 import sys
 import cPickle as pickle
 import socket
@@ -20,6 +30,7 @@ log.addHandler(strm)
 log.setLevel(20)
 
 def handleConnection(sock, folderPath):
+    """Thread function to handle the actual file transfer."""
     try:
         sock.settimeout(2000)
         # initial metadata transfer transaction
