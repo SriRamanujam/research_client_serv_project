@@ -19,7 +19,9 @@ import logging
 import os.path
 import thread
 
-MSGLEN = 4096
+# good balance for medium-to-large files
+# todo: maybe make this a tweakable knob?
+MSGLEN = 8192
 
 # These lines are my typical involved logging setup.
 log = logging.getLogger("Server")
@@ -31,6 +33,7 @@ log.setLevel(20)
 
 def handleConnection(sock, folderPath):
     """Thread function to handle the actual file transfer."""
+    size = 0
     try:
         sock.settimeout(2000)
         # initial metadata transfer transaction
@@ -53,17 +56,35 @@ def handleConnection(sock, folderPath):
     log.debug("path is " + str(path))
     open(path, "a").close() # creates the new file so that we can write to it
 
+    # ACHTUNG: This will not overwrite pre-existing files with the same name!
+    # It will append. This is to help facilitate resuming of transfers.
     with open(path, "ab+") as f:
-        log.debug("file opened for transfer")
+        log.debug("file opened for transfer, of length " + str(size))
+        datalen = 0
         while True:
-            data = sock.recv(MSGLEN)
-            log.debug("data received")
+            data = ""
+            while len(data) < MSGLEN:
+                data += sock.recv(MSGLEN - len(data))
+                log.debug("buffer size is now " + str(len(data)))
+                log.debug("total data received is now " + str(datalen))
+                if (datalen + len(data)) == size:
+                    # We've received the full file (presumably)
+                    log.debug("full file received, continuing")
+                    datalen = 0
+                    break
+                if data == "Transfer done":
+                    # This is to break the recv loop so processing can proceed
+                    break
+            log.debug("chunk received")
             if data == "Transfer done":
                 log.info("Transfer complete")
                 break
+            datalen += len(data)
+            log.debug("datalen is now " + str(datalen))
             f.write(bytearray(data))
             f.flush()
             sock.send("Received".encode('utf-8'))
+            log.debug("Chunk receive confirmation sent")
 
     return
 if __name__ == "__main__":

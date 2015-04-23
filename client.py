@@ -23,7 +23,7 @@ import os
 import time
 import thread
 
-MSGLEN = 4096
+MSGLEN = 8192 
 TIMEOUT_LEN = 3000
 
 # These lines are my typical involved logging setup.
@@ -67,6 +67,7 @@ def send_file(filename):
             try:
                 conn.send(bytearray(chunk))
                 res = conn.recv(MSGLEN)
+                log.debug(res)
                 if res == "Received":
                     return True
                 return False
