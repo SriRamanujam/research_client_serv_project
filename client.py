@@ -122,7 +122,7 @@ if __name__ == "__main__":
         log.debug(path)
         # for now, we skip anything that isn't a file for simplicity's sake
         filename = os.path.join(path, f)
-        log.debug(filename)
+        log.info("Now sending " + filename)
         if not os.path.isfile(filename):
             log.debug("not a file")
             continue
